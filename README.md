@@ -41,3 +41,9 @@ pt lang_code query
 ```sh
 pt
 ```
+#### To do
+
+* Words suggestions   (for a wrong use input)
+* More verbose errors (internet connection, a tool not installed etc)
+* Offline database    (For new words)
+
