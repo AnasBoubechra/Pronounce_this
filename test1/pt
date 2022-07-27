@@ -1,0 +1,74 @@
+#!/bin/sh
+
+# Author: ANAS.B (dy@ducky)
+
+MPLAYER="play"
+
+# Check if a directory exists
+ifdir(){
+if [ ! -d $1 ];then
+    mkdir -p $1 
+fi
+}
+ifinstalled(){
+	# Only for arch based distros
+	for x in "$@"; do
+	if ! which "$x" >/dev/null 2>&1 && ! pacman -Qq "$x" >/dev/null 2>&1; then
+ 		notify-send "📦 $x" "must be installed for this function." && exit 1 ;
+	fi
+done
+}
+check(){
+	#checks if a variable is an empty string
+	if [ -z $1 ];then
+		exit
+	fi
+}
+
+scraper(){
+	scraper=$(curl "https://${LANG}.wiktionary.org/wiki/${QUERY,,}" | grep -Eo "//upload[a-zA-Z0-9./?=_%:-]*" | grep ogg) 
+	check $scraper
+	echo "${scraper}"  > "${DIR}/${QUERY,,}"
+}
+audio(){
+    # Formats the url into a nice friendly input
+    ans=$(cut -d'/' -f8 "${DIR}/${QUERY,,}" | dmenu -l 5 -p "Select the audio file  : ")
+    check $ans
+    AUDIO_URL="$(grep $ans "${DIR}/${QUERY,,}" | head -n 1)"
+    $MPLAYER "https:${AUDIO_URL}"
+}
+if_exists(){
+# check if a the QUERY exists in /tmp/read_this
+    if test -f "${DIR}/${QUERY,,}"; then
+        audio && exit 
+    fi
+scraper && audio
+}
+
+# Remove this line if you have a non arch based distro
+ifinstalled dmenu cut grep curl play 
+
+case $# in 
+	0)
+		TMP=$(cut -f 2 lang_codes | dmenu -l 10 -p "Select a language (Lowercase!) : ")
+		QUERY=$(echo "" | dmenu -p "Pronounce what  ?: ")
+		LANG=$(grep $TMP lang_codes | cut -f 1)
+		DIR="$HOME/.config/lang/${LANG}"
+		ifdir $DIR
+		check $QUERY
+		if_exists
+		;;
+	2)
+		LANG="$1"
+		QUERY="$2"
+		DIR="$HOME/.config/lang/${LANG}"
+		ifdir ${DIR}
+		if_exists
+		;;
+	*)
+		printf '\e[1;34m%-6s\e[m' "Command line usage:  pt lang_code search_query"
+		printf "\n"
+		printf '\e[1;34m%-6s\e[m' "Example           :  pt de hallo"
+		exit
+		;;
+esac
