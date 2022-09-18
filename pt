@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Author: ANAS.B (dy@ducky)
 
@@ -10,14 +10,6 @@ if [ ! -d $1 ];then
     mkdir -p $1 
 fi
 }
-ifinstalled(){
-	# Only for arch based distros
-	for x in "$@"; do
-	if ! which "$x" >/dev/null 2>&1 && ! pacman -Qq "$x" >/dev/null 2>&1; then
- 		notify-send "📦 $x" "must be installed for this function." && exit 1 ;
-	fi
-done
-}
 check(){
 	#checks if a variable is an empty string
 	if [ -z $1 ];then
@@ -25,8 +17,14 @@ check(){
 	fi
 }
 
+check_if_installed(){
+for dep in dmenu cut grep curl play; do
+  command_exists "$dep" || echo "\n $dep is a required dependency, please install it"
+done
+}
 scraper(){
-	scraper=$(curl "https://${LANG}.wiktionary.org/wiki/${QUERY,,}" | grep -Eo "//upload[a-zA-Z0-9./?=_%:-]*" | grep ogg) 
+
+	scraper=$(curl "https://${LANG}.wiktionary.org/wiki/${QUERY,,}" | grep -Eo "//upload[a-zA-Z0-9./?=_%:-]*\.+(ogg|mp3|wav|aac)")
 	check $scraper
 	echo "${scraper}"  > "${DIR}/${QUERY,,}"
 }
@@ -37,6 +35,10 @@ audio(){
     AUDIO_URL="$(grep $ans "${DIR}/${QUERY,,}" | head -n 1)"
     $MPLAYER "https:${AUDIO_URL}"
 }
+
+command_exists () {
+	command -v "$1" > /dev/null 2>&1
+}
 if_exists(){
 # check if a the QUERY exists in /tmp/read_this
     if test -f "${DIR}/${QUERY,,}"; then
@@ -44,9 +46,6 @@ if_exists(){
     fi
 scraper && audio
 }
-
-# Remove this line if you have a non arch based distro
-ifinstalled dmenu cut grep curl play 
 
 case $# in 
 	0)
