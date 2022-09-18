@@ -47,3 +47,5 @@ pt
 * More verbose errors (internet connection, a tool not installed etc)
 * Offline database    (For new words)
 
+#### Support
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q2EA2RO)
