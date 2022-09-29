@@ -73,7 +73,7 @@ check_dep(){
 }
 
 _main_(){
-    if ls -A "$aud_dir" 2> /dev/null;then # check if a dir is not empty instead of existance
+    if ls -A "$aud_dir" 2> /dev/null;then
         selected=$(ls "$aud_dir" | $1)
         mpv "${aud_dir}/${selected}"
         exit 0
@@ -91,7 +91,7 @@ _main_(){
 }
 
 download_aud(){
-    mkdir -p "${aud_dir}" # Buggy
+    mkdir -p "${aud_dir}" 
     printf "Downloading the audios ..."
     cat $tmpfile | parallel curl -O --output-dir "${aud_dir}" && printf "Download completed." \
         || (printf "Enable to download the audio files !" && exit 1)
