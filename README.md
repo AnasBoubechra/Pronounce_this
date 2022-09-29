@@ -1,51 +1,45 @@
-## Pronounce_this supports many languges !
-
-> For more informantions check the lang_codes file.
+## Pronounce this Version 2.0
 
 ### Dependencies
+There is only one required dependency `curl`,however the rest require some
+configuration before you can replace them.
 
-##### you can replace `play` with `mpv` or other audio player
-
----
- 
-* curl
-* grep
-* cut
+### Optional dependencies
 * dmenu
-* play
-
----
+* fzf
+* parallel 
+* mpv
 
 ### Install
 
 ```sh
 git clone https://github.com/AnasBoubechra/Pronounce_this.git
-cd Pronounce_this
-chmod +x pt 
-
-# To put the script in your path 
-PATH="$HOME/.local/share/bin/" # Or '/usr/bin'
-cp pt $PATH # You might want to use sudo of /usr/bin ! 
+cd Pronounce_this && chmod +x pt
+# Make sure you put the script in your $PATH
+./pt # Or 'pt' if the script is in path
 ```
 
+#### To put the script in your path 
+```
+PATH="$HOME/.local/share/bin/" # Or '/usr/bin'
+```
 ### Usage
 
-#### Command line usage
+Simple query based search `pt -q <string>`
+To list the audio files using dmenu  `pt -mq <string>` Or `pt -m -q <string>`
+To list the audio files using fzf  `pt -fq <string>` Or `pt -f -q <string>`
+Use a specific language code (en,de,fr...) `pt -q <string> -l de`
 
-```sh
-pt lang_code query
-```
+### Enhancements
 
-#### Just by running the script
+* Fzf support
+* Dmenu support
+* Offline audio downloads
+* POSIX-compliant 
+* parallel downloads 
+* Efficient memory usage
+---
 
-```sh
-pt
-```
-#### To do
-
-* Words suggestions   (for a wrong use input)
-* More verbose errors (internet connection, a tool not installed etc)
-* Offline database    (For new words)
 
 #### Support
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q2EA2RO)
