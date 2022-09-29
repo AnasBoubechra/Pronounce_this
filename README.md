@@ -25,10 +25,10 @@ PATH="$HOME/.local/share/bin/" # Or '/usr/bin'
 ```
 ### Usage
 
-Simple query based search `pt -q <string>`
-To list the audio files using dmenu  `pt -mq <string>` Or `pt -m -q <string>`
-To list the audio files using fzf  `pt -fq <string>` Or `pt -f -q <string>`
-Use a specific language code (en,de,fr...) `pt -q <string> -l de`
+* Simple query based search `pt -q <string>`
+* To list the audio files using dmenu  `pt -mq <string>` Or `pt -m -q <string>`
+* To list the audio files using fzf  `pt -fq <string>` Or `pt -f -q <string>`
+* Use a specific language code (en,de,fr...) `pt -q <string> -l de`
 
 ### Enhancements
 
