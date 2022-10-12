@@ -11,10 +11,6 @@
 
 set -e
 
-lang=
-query=
-tmpfile=
-
 dmenu=false
 fzf=false
 
@@ -50,7 +46,8 @@ getsource(){
 
     trap cleanup INT QUIT TERM EXIT
 
-    query=$(printf "$query" | tr '[:upper:]' '[:lower:]')
+    query=$(printf "$query" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
+    aud_dir="${download_dir}/${query}"
     tmpfile=`mktemp`
 
     cleanup(){
@@ -84,7 +81,7 @@ _main_(){
             grep $selected $tmpfile | mpv --playlist=-
             [ $download ] && download_aud
         else
-            printf "-> No results found for %s :/\n" "$query" >&2
+            printf ":/ No results found for %s \n" "$query" >&2
             exit 0
         fi
     fi
@@ -92,9 +89,9 @@ _main_(){
 
 download_aud(){
     mkdir -p "${aud_dir}" 
-    printf "Downloading the audios ..."
-    cat $tmpfile | parallel curl -O --output-dir "${aud_dir}" && printf "Download completed." \
-        || (printf "Enable to download the audio files !" && exit 1)
+    printf "Downloading the audios ...\n"
+    cat $tmpfile | parallel curl -O --output-dir "${aud_dir}" && printf "Downloads completed.\n" \
+        || (printf "Enable to download the audio files !\n" && exit 1)
 }
 
 while getopts "q:hl:dfmv" OPT; do
@@ -106,7 +103,7 @@ while getopts "q:hl:dfmv" OPT; do
         d) download=true ;;
         m) dmenu=true ;;
         v) show_version ;;
-        *) printf "Wrong usage !\n Show help with: $sname -h\n" >&2 && exit 1;;
+        *) printf "Wrong usage !\tShow help with: $ $sname -h\n" >&2 && exit 1;;
     esac
 done
 
@@ -119,8 +116,6 @@ fi
 
 [ $dmenu = "true" ] && [ $fzf = "true" ] && \
     printf "Error: -m and -f are mutually exclusive and may only be used once\n" >&2 && exit 2
-
-aud_dir="${download_dir}/${query}"
 
 if $dmenu;then
     check_dep dmenu
