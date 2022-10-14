@@ -92,7 +92,7 @@ _main_(){
 download_aud(){
     mkdir -p "${aud_dir}" 
     printf "Downloading the audios ...\n"
-    cat $tmpfile | parallel curl -O --output-dir "${aud_dir}" && printf "Downloads completed.\n" \
+    cat $tmpfile | parallel curl -s -O --output-dir "${aud_dir}" && printf "Downloads completed.\n" \
         || (printf "Enable to download the audio files !\n" && exit 1)
 }
 
