@@ -46,10 +46,6 @@ getsource(){
 
     trap cleanup INT QUIT TERM EXIT
 
-    query=$(printf "$query" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
-    aud_dir="${download_dir}/${query}"
-    tmpfile=`mktemp`
-
     cleanup(){
         [ -f $tmpfile ] && rm $tmpfile
     }
@@ -70,6 +66,11 @@ check_dep(){
 }
 
 _main_(){
+
+    query=$(printf "$query" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
+    aud_dir="${download_dir}/${query}"
+    tmpfile=`mktemp`
+
     if ls -A "$aud_dir" 2> /dev/null;then
         selected=$(ls "$aud_dir" | $1)
         mpv "${aud_dir}/${selected}"
@@ -80,9 +81,10 @@ _main_(){
             selected=$(rev $tmpfile | cut -d'/' -f 1 | rev | $1 )
             grep $selected $tmpfile | mpv --playlist=-
             [ $download ] && download_aud
+            exit 0
         else
             printf ":/ No results found for %s \n" "$query" >&2
-            exit 0
+            exit 1
         fi
     fi
 }
