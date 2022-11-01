@@ -1,18 +1,15 @@
 #!/bin/sh
 
-##############################################
-#  License :  GNU General Public License V3  #
-#  Author  :  CSCHAD (B.ANAS)                #
-#  Blog    :  https://cschad.tech            #
-#                                            #
-#  Shell script to help you pronounce        # 
-#   foreign words                            #
-##############################################
-
 set -e
 
 dmenu=false
 fzf=false
+
+N='\033[0m'       # Text Reset
+R='\033[0;91m'    # Red
+G='\033[0;92m'    # Green
+Y='\033[0;93m'    # Yellow
+W='\033[0;97m'    # White
 
 download_dir="$HOME/.pt"
 version="dev 2.0"
@@ -21,24 +18,29 @@ sname="$(basename $0)"
 
 show_help(){
     printf "
-    Usage:  $sname [ -q ARG ] [ -l ARG ] [vfdm]
+    ${Y}Usage:${N}  ${G}$sname${N} ${W}[ -q ARG ] [ -l ARG ] [vfdm]${N}
 
-         -q  For the search query !
-               Example: $sname -q hallo
+         ${Y}-q${N}  For the search query !
+               Example: ${G}$sname${N} -q hallo
 
-         -l  To add a language code
-               Example  $sname -l en -q hello
+         ${Y}-l${N}  To add a language code
+               Example  ${G}$sname${N} -l en -q hello
 
-         -d  To download the audios and store them locally. The default path is ${download_dir}
+         ${Y}-d${N}  To download the audios and store them locally.
                 
                 * For each query a folder will be created and store all the audios inside it !
                 * Support offline usage. 
 
-         -v  Show version
+         ${Y}-v${N}  Show version
 
-         -m  To use dmenu
+         ${Y}-m${N}  To use dmenu
 
-         -f  To use fzf
+         ${Y}-f${N}  To use fzf
+
+         (${G}-d${N}) For ${W}offline${N} ${Y}Usage:${N}
+
+             The script will create a directory located at ${W}${download_dir}/LangCode/SomeQuery${N}
+
 "
 }
 
@@ -46,54 +48,62 @@ getsource(){
 
     trap cleanup INT QUIT TERM EXIT
 
+
     cleanup(){
         [ -f $tmpfile ] && rm $tmpfile
     }
+
     curl -s "https://${lang:=en}.wiktionary.org/wiki/${query}" | \
-        grep -Eo '//upload[a-zA-Z0-9./?=_%:-]*\.+(ogg|mp3|wav|aac)' | sed 's/\/\//https:&/g' >$tmpfile
+        grep -Eo '//upload[a-zA-Z0-9./?=_%:-]*\.+(ogg|mp3|wav|aac)' | sort -u | \
+        grep $(printf ${lang:=en} | sed -e 's/^\(.\)/\U\1/g') | \
+        sed 's/\/\//https:&/g' >$tmpfile 
 }
 
 show_version(){
-        printf "$sname Version: %s\n" "$version"
+        printf "${G}$sname${N} ${W}Version:${N} ${Y}%s${N}\n" "$version"
         exit 0
 }
 
 
 check_dep(){
     if ! command -v "$1";then
-        printf "$1 is not installed !\n" && exit 127
+        printf "${R}$1 is not installed !${N}\n" && exit 127
     fi
 }
 
 _main_(){
 
-    query=$(printf "$query" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
-    aud_dir="${download_dir}/${query}"
+    query=$(printf "$query" | tr -d ' ')
     tmpfile=`mktemp`
+    aud_dir="${download_dir}/${lang:=en}/${query}"
 
-    if ls -A "$aud_dir" 2> /dev/null;then
+    if ls -A "$aud_dir" 2> /dev/null;then # check if a dir is not empty instead of existance
         selected=$(ls "$aud_dir" | $1)
-        mpv "${aud_dir}/${selected}"
+        mpv --quiet "${aud_dir}/${selected}"
         exit 0
     else
         getsource
         if [ -s $tmpfile ];then
-            selected=$(rev $tmpfile | cut -d'/' -f 1 | rev | $1 )
-            grep $selected $tmpfile | mpv --playlist=-
+            selected=$(rev $tmpfile | cut -d'/' -f 1 | rev | $1)
+            grep $selected $tmpfile | mpv --quiet --playlist=-
             [ $download ] && download_aud
-            exit 0
+	    exit 0
         else
-            printf ":/ No results found for %s \n" "$query" >&2
-            exit 1
+	        error
         fi
     fi
 }
 
+error(){
+	printf "No audio files found for $query \nLanguage code Used : ${lang:=en}\n"
+	exit 1
+}
+
 download_aud(){
     mkdir -p "${aud_dir}" 
-    printf "Downloading the audios ...\n"
-    cat $tmpfile | parallel curl -s -O --output-dir "${aud_dir}" && printf "Downloads completed.\n" \
-        || (printf "Enable to download the audio files !\n" && exit 1)
+    printf "${G}Downloading the audios ...${N}\n"
+    cat $tmpfile | parallel curl -s -O --output-dir "${aud_dir}" && printf "${G}Download completed.${N}\n" \
+        || (printf "${R}Enable to download the audio files !${N}\n" && exit 1)
 }
 
 while getopts "q:hl:dfmv" OPT; do
@@ -105,23 +115,23 @@ while getopts "q:hl:dfmv" OPT; do
         d) download=true ;;
         m) dmenu=true ;;
         v) show_version ;;
-        *) printf "Wrong usage !\tShow help with: $ $sname -h\n" >&2 && exit 1;;
+        *) printf "${R}Wrong usage !${N}\n Show help with: ${G}$sname${N} ${W}-h${N} \n" >&2 && exit 1;;
     esac
 done
 
-
 # If the query is empty or is not a casual word
 if ! expr "$query" : "[a-zA-Z]" 1>/dev/null; then
-    printf "Error: The query must be a non empty letter !\n" >&2  
+    printf "${R}Error:${N} The ${W}query${N} must be a non empty letter !\n" >&2  
     exit 1
 fi
 
 [ $dmenu = "true" ] && [ $fzf = "true" ] && \
-    printf "Error: -m and -f are mutually exclusive and may only be used once\n" >&2 && exit 2
+    printf "${R}Error:${N} ${W}-m${N} and ${W}-f${N} are mutually exclusive and may only be used once\n" >&2 && exit 2
+
 
 if $dmenu;then
     check_dep dmenu
-     _main_ 'dmenu -l 10'
+     _main_ "dmenu -l 10"
 elif $fzf
 then
     check_dep fzf 
