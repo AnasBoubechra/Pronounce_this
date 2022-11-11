@@ -19,7 +19,7 @@ sname="$(basename $0)"
 
 show_help(){
     printf "
-    ${Y}Usage:${N}  ${G}$sname${N} ${W}( -q ARG | -p ARG ) [ -l ARG ] [vfdm]${N}
+    ${Y}Usage:${N}  ${G}$sname${N} ${W}[ -q ARG ] [ -p ARG ] [ -l ARG ] [vfdm]${N}
 
          ${Y}-q${N}  For the search query !
                Example: ${G}$sname${N} -q hallo
@@ -133,7 +133,7 @@ while getopts "q:hl:dfmvp:" OPT; do
         q) query=$OPTARG ;;
         l) lang=$OPTARG ;;
         f) fzf=true;;
-	p) generic_pronunciation "$OPTARG";;
+        p) generic_pronunciation "$OPTARG";;
         d) download=true ;;
         m) dmenu=true ;;
         v) show_version ;;
@@ -148,7 +148,6 @@ if ! expr "$query" : "[a-zA-Z]" 1>/dev/null;then
 fi
 
 [ $dmenu = "true" ] && [ $fzf = "true" ] && arg_error
-
 
 if $dmenu;then
     dep_error dmenu
