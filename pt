@@ -147,16 +147,18 @@ if ! expr "$query" : "[a-zA-Z]" 1>/dev/null;then
     exit 1
 fi
 
+# If both options are parsed (-m and -f)
 [ $dmenu = "true" ] && [ $fzf = "true" ] && arg_error
 
+# if dmenu is enabled
 if $dmenu;then
     dep_error dmenu
-     _main_ "dmenu -l 10"
+     _main_ "dmenu -l 10 -p Select_An_audio_file:"
 
 elif $fzf
 then
     dep_error fzf 
-    _main_ "fzf --reverse --height=40%"
+    _main_ "fzf --prompt Select_An_audio_file: --reverse --height=40%"
 else
     _main_ "head -n 1"
 fi
