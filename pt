@@ -19,7 +19,7 @@ sname="$(basename $0)"
 
 show_help(){
     printf "
-    ${Y}Usage:${N}  ${G}$sname${N} ${W}[ -q ARG ] [ -p ARG ] [ -l ARG ] [vfdm]${N}
+    ${Y}Usage:${N}  ${G}$sname${N} ${W}[ -q ARG ] [ -p ARG ] [ -l ARG ] [ -c ARG ] [vfdm]${N}
 
          ${Y}-q${N}  For the search query !
                Example: ${G}$sname${N} -q hallo
@@ -39,6 +39,9 @@ show_help(){
                 * For each query a folder will be created and store all the audios inside it !
                 * Support offline usage. 
 
+         ${Y}-c${N}  German Verbs conjugation ( Generic Pronunciation ) 
+                     For more options : ${G}$sname${N} -c --help
+
          ${Y}-v${N}  Show version
 
          ${Y}-m${N}  To use dmenu
@@ -54,7 +57,7 @@ show_help(){
 
 
 show_version(){
-        printf "${G}$sname${N} ${W}Version:${N} ${Y}%s${N}\n" "$version"
+    printf "${G}$sname${N} ${W}Version:${N} ${Y}%s${N}\n" "$version"
 	exit 0
 }
 
@@ -73,6 +76,35 @@ get_source_code(){
         sed 's/\/\//https:&/g' >$tmpfile 
 }
 
+de_conj_pronunciation(){
+
+    verb=$1
+    S1=$2
+    S2=$3
+
+	case $verb in 
+		h|-h|--help) 
+			printf "${G}$ ${G}$sname${N} -c${N} ${W}'verb indikativ praesens'${N}
+
+ 		                   ${G}$ ${G}$sname${N} -c${N} ${W}'lachen indikativ plusquamperfekt'${N}
+ 				   Available Tenses:
+ 					     ${G}(konjunktiv indikativ)${N}
+ 				             ${G}(praesens praeteritum perfekt plusquamperfekt futur1 futur2)${N}
+         			     Defaults: indikativ praesens
+
+                         Note: Make sure you add your options under a single argument 
+                         Instead of ${G}$sname${N} -c haben indikativ futur1
+                         It should be ${G}$sname${N} -c \"haben indikativ futur1\"
+ 				     \n"
+                      exit 0
+ 				     ;;
+        [a-z]*) $PLAYER "https://www.verbformen.de/konjugation/${S1:=indikativ}/${S2:=praesens}/${1}.mp3"
+        exit 0
+        ;;
+        *) printf "${R}Wrong Usage !${N}\n\t${G}$ ${G}$sname${N} -c${N} [--help|-h|h]\n" && exit 1
+        ;;
+esac
+}
 
 generic_pronunciation(){
 	$PLAYER "https://audio.dict.cc/speak.audio.php?type=wav&lang=${lang:=en}&text=$@" 2>/dev/null
@@ -127,13 +159,14 @@ _main_(){
 	    fi
 }
 
-while getopts "q:hl:dfmvp:" OPT; do
+while getopts "q:hl:dfc:mvp:" OPT; do
     case "$OPT" in 
         h) show_help && exit 0 ;; 
         q) query=$OPTARG ;;
         l) lang=$OPTARG ;;
         f) fzf=true;;
         p) generic_pronunciation "$OPTARG";;
+        c) de_conj_pronunciation $OPTARG;;
         d) download=true ;;
         m) dmenu=true ;;
         v) show_version ;;
