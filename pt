@@ -1,4 +1,12 @@
 #!/bin/sh
+##############################################
+#  License :  GNU General Public License V3  #
+#  Author  :  CSCHAD (B.ANAS)                #
+#  Blog    :  https://cschad.tech            #
+#                                            #
+#  Shell script to help you pronounce        # 
+#   foreign words                            #
+##############################################
 
 set -e
 
