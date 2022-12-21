@@ -10,6 +10,8 @@ configuration before you can replace them.
 * fzf
 * parallel 
 * mpv 
+    * if you wish to use another media player, make sure you change the variable
+      `PLAYER=YouMediaPlayer` in the line __14__
 
 ### Install
 
