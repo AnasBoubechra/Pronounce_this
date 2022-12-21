@@ -1,4 +1,5 @@
 #!/bin/sh
+
 ##############################################
 #  License :  GNU General Public License V3  #
 #  Author  :  CSCHAD (B.ANAS)                #
@@ -6,7 +7,7 @@
 #                                            #
 #  Shell script to help you pronounce        # 
 #   foreign words                            #
-##############################################
+############################################## 
 
 set -e
 
@@ -72,16 +73,19 @@ show_version(){
 get_source_code(){
 
     trap cleanup INT QUIT TERM EXIT
-
-
     cleanup(){
         [ -f $tmpfile ] && rm $tmpfile
     }
+    if [ "$lang" = "de" ]; then
 
-    curl -s "https://${lang:=en}.wiktionary.org/wiki/${query}" | \
-        grep -Eo '//upload[a-zA-Z0-9./?=_%:-]*\.+(ogg|mp3|wav|aac)' | sort -u | \
-        grep $(printf ${lang:=en} | sed -e 's/^\(.\)/\U\1/g') | \
-        sed 's/\/\//https:&/g' >$tmpfile 
+		curl -s "https://www.dwds.de/wb/${query}" | \
+		grep -Eo "https://media.dwds.de/[a-zA-Z0-9/_]*\.+(mp3)" | sort -u >$tmpfile
+	else
+		    curl -s "https://${lang:=en}.wiktionary.org/wiki/${query}" | \
+			grep -Eo '//upload[a-zA-Z0-9./?=_%:-]*\.+(ogg|mp3|wav|aac)' | sort -u | \
+			grep $(printf ${lang:=en} | sed -e 's/^\(.\)/\U\1/g') | \
+			sed 's/\/\//https:&/g' >$tmpfile 
+    fi
 }
 
 de_conj_pronunciation(){
@@ -162,6 +166,7 @@ _main_(){
 		    [ $download ] && download_aud
 		    exit 0
 		else
+			cat "$tmpfile"
 			null_error "$1"
 		fi
 	    fi
