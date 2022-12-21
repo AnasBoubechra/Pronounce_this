@@ -78,7 +78,7 @@ get_source_code(){
     }
     if [ "$lang" = "de" ]; then
 
-		curl -s "https://www.dwds.de/wb/${query}" | \
+        curl -L -s "https://www.dwds.de/?q=${query}&from=wb" | \
 		grep -Eo "https://media.dwds.de/[a-zA-Z0-9/_]*\.+(mp3)" | sort -u >$tmpfile
 	else
 		    curl -s "https://${lang:=en}.wiktionary.org/wiki/${query}" | \
