@@ -12,8 +12,9 @@
 set -e
 
 PLAYER="mpv --quiet"
-dmenu=false
-fzf=false
+DEFAULT_LANG=en
+DMENU=false
+FZF=false
 
 N='\033[0m'       # Text Reset
 R='\033[0;91m'    # Red
@@ -21,52 +22,41 @@ G='\033[0;92m'    # Green
 Y='\033[0;93m'    # Yellow
 W='\033[0;97m'    # White
 
-download_dir="$HOME/.pt"
-version="dev 2.0"
+DOWNLOAD_DIR="$HOME/.pt"
+VERSION="dev 2.0"
+REGEX="^[A-Z].*"
 
-sname="$(basename $0)"
+SNAME="$(basename $0)"
+
 
 show_help(){
     printf "
-    ${Y}Usage:${N}  ${G}$sname${N} ${W}[ -q ARG ] [ -p ARG ] [ -l ARG ] [ -c ARG ] [vfdm]${N}
-
+    ${Y}Usage:${N}  ${G}$SNAME${N} ${W}[ -q ARG ] [ -p ARG ] [ -l ARG ] [ -c ARG ] [vfdm]${N}
          ${Y}-q${N}  For the search query !
-               Example: ${G}$sname${N} -q hallo
-
+               Example: ${G}$SNAME${N} -q hallo
          ${Y}-l${N}  To add a language code
-               Example  ${G}$sname${N} -l en -q hello
+               Example  ${G}$SNAME${N} -l en -q hello
 	       Default language code : en ( english )
-
          ${Y}-p${N}  For generic Pronunciation !
-               Example: ${G}$sname${N} -l en -p \"${W}He Who Has A Why To Live Can Bear Almost Any How${N}\"
-
-                        ${G}$sname${N} -p warum -l de
-
+               Example: ${G}$SNAME${N} -l en -p \"${W}He Who Has A Why To Live Can Bear Almost Any How${N}\"
+                        ${G}$SNAME${N} -p warum -l de
          ${Y}-d${N}  To download the audios and store them locally.
-                
 		${W}ONLY${N} for ${G}-q${N} option !
                 * For each query a folder will be created and store all the audios inside it !
                 * Support offline usage. 
-
          ${Y}-c${N}  German Verbs conjugation ( Generic Pronunciation ) 
-                     For more options : ${G}$sname${N} -c --help
-
-         ${Y}-v${N}  Show version
-
+                     For more options : ${G}$SNAME${N} -c --help
+         ${Y}-v${N}  Show VERSION
          ${Y}-m${N}  To use dmenu
-
          ${Y}-f${N}  To use fzf
-
          (${G}-d${N}) For ${W}offline${N} ${Y}Usage:${N}
-
-             The script will create a directory located at ${W}${download_dir}/LangCode/SomeQuery${N}
-
+             The script will create a directory located at ${W}${DOWNLOAD_DIR}/LangCode/SomeQuery${N}
 "
 }
 
 
 show_version(){
-    printf "${G}$sname${N} ${W}Version:${N} ${Y}%s${N}\n" "$version"
+    printf "${G}$SNAME${N} ${W}Version:${N} ${Y}%s${N}\n" "$VERSION"
 	exit 0
 }
 
@@ -76,14 +66,14 @@ get_source_code(){
     cleanup(){
         [ -f $tmpfile ] && rm $tmpfile
     }
-    if [ "$lang" = "de" ]; then
+    if printf "$query" | grep -P -q "$REGEX"; then
 
-        curl -L -s "https://www.dwds.de/?q=${query}&from=wb" | \
+		curl -L -s "https://www.dwds.de/?q=${query}&from=wb" | \
 		grep -Eo "https://media.dwds.de/[a-zA-Z0-9/_]*\.+(mp3)" | sort -u >$tmpfile
 	else
-		    curl -s "https://${lang:=en}.wiktionary.org/wiki/${query}" | \
+		    curl -s "https://${lang}.wiktionary.org/wiki/${query}" | \
 			grep -Eo '//upload[a-zA-Z0-9./?=_%:-]*\.+(ogg|mp3|wav|aac)' | sort -u | \
-			grep $(printf ${lang:=en} | sed -e 's/^\(.\)/\U\1/g') | \
+			grep $(printf ${lang} | sed -e 's/^\(.\)/\U\1/g') | \
 			sed 's/\/\//https:&/g' >$tmpfile 
     fi
 }
@@ -91,35 +81,38 @@ get_source_code(){
 de_conj_pronunciation(){
 
     verb=$1
-    S1=$2
-    S2=$3
+    s1=$2
+    s2=$3
 
 	case $verb in 
 		h|-h|--help) 
-			printf "${G}$ ${G}$sname${N} -c${N} ${W}'verb indikativ praesens'${N}
+			printf "${G}$ ${G}$SNAME${N} -c${N} ${W}'verb indikativ praesens'${N}
 
- 		                   ${G}$ ${G}$sname${N} -c${N} ${W}'lachen indikativ plusquamperfekt'${N}
- 				   Available Tenses:
- 					     ${G}(konjunktiv indikativ)${N}
- 				             ${G}(praesens praeteritum perfekt plusquamperfekt futur1 futur2)${N}
-         			     Defaults: indikativ praesens
+	 ${G}$ ${G}$SNAME${N} -c${N} ${W}'lachen indikativ plusquamperfekt'${N}
+	 Available Tenses:
+	    ${G}(konjunktiv indikativ)${N}
+	    ${G}(praesens praeteritum perfekt plusquamperfekt futur1 futur2)${N}
+	    Defaults: indikativ praesens
 
-                         Note: Make sure you add your options under a single argument 
-                         Instead of ${G}$sname${N} -c haben indikativ futur1
-                         It should be ${G}$sname${N} -c \"haben indikativ futur1\"
+	 Note: Make sure you add your options under a single argument 
+	 Instead of ${G}$SNAME${N} -c haben indikativ futur1
+	 It should be ${G}$SNAME${N} -c \"haben indikativ futur1\"
  				     \n"
                       exit 0
  				     ;;
-        [a-z]*) $PLAYER "https://www.verbformen.de/konjugation/${S1:=indikativ}/${S2:=praesens}/${1}.mp3"
-        exit 0
+        [a-z]*) 
+		aud_link=$(curl -s -L "https://www.verbformen.de/konjugation/?w=${verb}" | \
+			grep -Eo "(http|https)://[a-zA-Z0-9./?=_%:-]*/${s1:=indikativ}/${s2:=praesens}/.*.mp3" | sort -u)
+			[ $aud_link ] && $PLAYER $aud_link || printf "das Verb '${G}${verb}${N}' wurde nicht gefunden\n"
+		exit 0
         ;;
-        *) printf "${R}Wrong Usage !${N}\n\t${G}$ ${G}$sname${N} -c${N} [--help|-h|h]\n" && exit 1
+        *) printf "${R}Wrong Usage !${N}\n\t${G}$ ${G}$SNAME${N} -c${N} [--help|-h|h]\n" && exit 1
         ;;
 esac
 }
 
 generic_pronunciation(){
-	$PLAYER "https://audio.dict.cc/speak.audio.php?type=wav&lang=${lang:=en}&text=$@" 2>/dev/null
+	$PLAYER "https://audio.dict.cc/speak.audio.php?type=wav&lang=${lang:=${DEFAULT_LANG}}&text=$@" 2>/dev/null
 	exit 0
 }
 
@@ -138,7 +131,7 @@ dep_error(){
 }
 
 null_error(){
-	printf "No audio files found for $query \nLanguage code Used : ${lang:=en}\n" | $1
+	printf "No audio files found for $query \nLanguage code Used : ${lang}\n" | $1
 	exit 1
 }
 
@@ -152,7 +145,7 @@ _main_(){
 
     query=$(printf "$query" | tr -d ' ')
     tmpfile=`mktemp`
-    aud_dir="${download_dir}/${lang:=en}/${query}"
+    aud_dir="${DOWNLOAD_DIR}/${lang}/${query}"
 
 	if ls -A "$aud_dir" 2> /dev/null;then # check if a dir is not empty instead of existance
 		selected=$(ls "$aud_dir" | $1)
@@ -177,15 +170,18 @@ while getopts "q:hl:dfc:mvp:" OPT; do
         h) show_help && exit 0 ;; 
         q) query=$OPTARG ;;
         l) lang=$OPTARG ;;
-        f) fzf=true;;
+        f) FZF=true;;
         p) generic_pronunciation "$OPTARG";;
         c) de_conj_pronunciation $OPTARG;;
         d) download=true ;;
-        m) dmenu=true ;;
+        m) DMENU=true ;;
         v) show_version ;;
-        *) printf "${R}Wrong usage !${N}\n Show help with: ${G}$sname${N} ${W}-h${N} \n" >&2 && exit 1;;
+        *) printf "${R}Wrong usage !${N}\n Show help with: ${G}$SNAME${N} ${W}-h${N} \n" >&2 && exit 1;;
     esac
 done
+
+# set the default language code if it's empty
+[ "$lang" ] || lang=${DEFAULT_LANG}
 
 # If the query is empty or is not a casual word
 if ! expr "$query" : "[a-zA-Z]" 1>/dev/null;then
@@ -194,14 +190,14 @@ if ! expr "$query" : "[a-zA-Z]" 1>/dev/null;then
 fi
 
 # If both options are parsed (-m and -f)
-[ $dmenu = "true" ] && [ $fzf = "true" ] && arg_error
+[ $DMENU = "true" ] && [ $FZF = "true" ] && arg_error
 
 # if dmenu is enabled
-if $dmenu;then
+if $DMENU;then
     dep_error dmenu
      _main_ "dmenu -l 10 -p Select_An_audio_file:"
 
-elif $fzf
+elif $FZF
 then
     dep_error fzf 
     _main_ "fzf --prompt Select_An_audio_file: --reverse --height=40%"
